@@ -1,6 +1,6 @@
 # Họ tên: Lê Hùng Cường
 # Mã sinh viên: 202418859
-
+import threading
 from abc import ABC, abstractmethod
 from typing import Optional
 
@@ -76,22 +76,21 @@ class SmartDoor(IDevice, ILockable):
 class HomeConfiguration:
     """Singleton – chỉ có một thể hiện cấu hình ngôi nhà"""
     _instance: Optional["HomeConfiguration"] = None
+    _lock = threading.Lock()
 
     def __new__(cls):
-        instance = super().__new__(cls)
-        return instance
-
-    def __init__(self):
-        if not hasattr(self, "_initialized"):
-            self.owner_name = "Lê Hùng Cường"
-            self.night_light_level = 30   # %
-            self._initialized = True
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    inst = super().__new__(cls)
+                    inst.owner_name = "Lê Hùng Cường"
+                    inst.night_light_level = 30   # %
+                    cls._instance = inst
+        return cls._instance
 
     @classmethod
     def get_instance(cls) -> "HomeConfiguration":
-        if cls._instance is None:
-            cls._instance = cls()
-        return cls._instance
+        return cls()
 
 
 #  FACTORY
@@ -123,20 +122,16 @@ class SmartHomeFacade:
 
     def go_to_work(self) -> None:
         print("\n CHẾ ĐỘ ĐI LÀM ")
-        self._light.turn_on()
-        self._fan.turn_on()
+        self._light.turn_off()
+        self._fan.turn_off()
         self._door.lock()
 
     def go_to_sleep(self) -> None:
-        print("\n=== CHẾ ĐỘ ĐI NGỦ ===")
+        print("\n CHẾ ĐỘ ĐI NGỦ ")
         self._fan.turn_off()
         self._door.lock()
         self._light.turn_on()
-        try:
-            level = HomeConfiguration.get_instance().night_ligt_level
-        except AttributeError:
-            level = 0
-            print("(Lỗi: không đọc được night_light_level do sai tên thuộc tính)")
+        level = HomeConfiguration.get_instance().night_light_level
         print(f"Night light level: {level}%")
 
 
@@ -175,7 +170,7 @@ def main():
 
         try:
             if choice == "1":
-                dtype = input("Loại thiết bị (light/fan/door): ").strip()
+                dtype = input("Loại thiết bị (light/fan/door): ").strip().lower()
                 name = input("Tên thiết bị: ").strip() or f"New {dtype}"
                 new_dev = DeviceFactory.create_device(dtype, name)
                 print(f"Đã tạo: {type(new_dev).__name__} – {name}")
@@ -199,6 +194,8 @@ def main():
                     devices[key].turn_on()
                 elif action == "2":
                     devices[key].turn_off()
+                else:
+                    print("Lựa chọn không hợp lệ.")
 
             elif choice == "3":
                 door_dev = devices.get("door")
