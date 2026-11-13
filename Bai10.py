@@ -176,12 +176,9 @@ def main():
                 print(f"Đã tạo: {type(new_dev).__name__} – {name}")
                 devices[dtype] = new_dev
                 # Cập nhật facade nếu cần
-                if dtype == "light":
-                    facade = SmartHomeFacade(new_dev, devices["fan"], devices["door"])  # type: ignore
-                elif dtype == "fan":
-                    facade = SmartHomeFacade(devices["light"], new_dev, devices["door"])  # type: ignore
-                elif dtype == "door":
-                    facade = SmartHomeFacade(devices["light"], devices["fan"], new_dev)  # type: ignore
+                 devices[dtype] = new_dev
+                # Dựng lại facade từ dict thiết bị hiện tại
+                facade = SmartHomeFacade(devices["light"], devices["fan"], devices["door"])  # type: ignore
 
             elif choice == "2":
                 print("Thiết bị hiện có:", list(devices.keys()))
