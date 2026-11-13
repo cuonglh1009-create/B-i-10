@@ -176,7 +176,7 @@ def main():
                 print(f"Đã tạo: {type(new_dev).__name__} – {name}")
                 devices[dtype] = new_dev
                 # Cập nhật facade nếu cần
-                 devices[dtype] = new_dev
+                devices[dtype] = new_dev
                 # Dựng lại facade từ dict thiết bị hiện tại
                 facade = SmartHomeFacade(devices["light"], devices["fan"], devices["door"])  # type: ignore
 
